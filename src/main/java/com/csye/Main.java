@@ -57,12 +57,16 @@ public class Main implements CloudEventsFunction {
                      Response response = Mail.using(configuration)
                              .to(decodedData.trim())
                              .subject("Verify your email address")
-                             .text("Please click the link to verify your email:")
+                             .text("Please click the link to verify your email: http://josephalex.me/user/verify?token=" + id)
                              .build()
                              .send();
 
                      if (response.isOk()) {
                          logger.info("Mail sent successfully.");
+                         // Update the user table with the verification time
+                            String updateSql = "update person set verification_time = now() where id = " + "'" + id + "'";
+                            PreparedStatement updateStatement = conn.prepareStatement(updateSql);
+                            updateStatement.executeUpdate();
                      } else {
                             logger.warning("Error sending mail: " + response.responseMessage());
                      }
