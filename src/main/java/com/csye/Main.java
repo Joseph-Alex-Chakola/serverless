@@ -57,7 +57,7 @@ public class Main implements CloudEventsFunction {
                      Response response = Mail.using(configuration)
                              .to(decodedData.trim())
                              .subject("Verify your email address")
-                             .text("Please click the link to verify your email: http://josephalex.me/user/verify?token=" + id)
+                             .text("Please click the link to verify your email: http://josephalex.me:8080/user/verify?token=" + id)
                              .build()
                              .send();
 
