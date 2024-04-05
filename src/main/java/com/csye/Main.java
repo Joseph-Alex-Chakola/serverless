@@ -18,20 +18,21 @@ import java.util.logging.Logger;
 
 public class Main implements CloudEventsFunction {
     private static final Logger logger = Logger.getLogger(Main.class.getName());
-    private static final String API_KEY = "ad928d31583fce4488fa735dd5503710-f68a26c9-e217c4e7";
+    private static final String API_KEY = System.getenv("MAILGUN_API_KEY");
     private static final String DOMAIN = System.getenv("DOMAIN");
     private final String host = System.getenv("DB_HOST");
     private final String user = System.getenv("DB_USERNAME");
     private final String password = System.getenv("DB_PASSWORD");
     private final String database = System.getenv("DB_NAME");
     private final String port = System.getenv("DB_PORT");
+
     @Override
     public void accept(CloudEvent event) {
         try {
-            String url = "jdbc:postgresql://"+host+":"+port+"/"+database;
+            String url = "jdbc:postgresql://" + host + ":" + port + "/" + database;
             logger.info("Connecting to database: " + url);
             Connection conn = DriverManager.getConnection(url, user, password);
-           logger.info("Connection established");
+            logger.info("Connection established");
             if (event.getData() != null) {
                 String cloudEventData = new String(event.getData().toBytes(), StandardCharsets.UTF_8);
                 Gson gson = new Gson();
@@ -54,22 +55,22 @@ public class Main implements CloudEventsFunction {
                             .apiKey(API_KEY)
                             .from("Joseph Alex Chakola", "josephalex@" + DOMAIN);
 
-                     Response response = Mail.using(configuration)
-                             .to(decodedData.trim())
-                             .subject("Verify your email address")
-                             .text("Please click the link to verify your email: http://josephalex.me:8080/user/verify?token=" + id)
-                             .build()
-                             .send();
+                    Response response = Mail.using(configuration)
+                            .to(decodedData.trim())
+                            .subject("Verify your email address")
+                            .text("Please click the link to verify your email: https://" + DOMAIN + ":443/user/verify?token=" + id)
+                            .build()
+                            .send();
 
-                     if (response.isOk()) {
-                         logger.info("Mail sent successfully.");
-                         // Update the user table with the verification time
-                            String updateSql = "update person set verification_time = now() where id = " + "'" + id + "'";
-                            PreparedStatement updateStatement = conn.prepareStatement(updateSql);
-                            updateStatement.executeUpdate();
-                     } else {
-                            logger.warning("Error sending mail: " + response.responseMessage());
-                     }
+                    if (response.isOk()) {
+                        logger.info("Mail sent successfully.");
+                        // Update the user table with the verification time
+                        String updateSql = "update person set verification_time = now() where id = " + "'" + id + "'";
+                        PreparedStatement updateStatement = conn.prepareStatement(updateSql);
+                        updateStatement.executeUpdate();
+                    } else {
+                        logger.warning("Error sending mail: " + response.responseMessage());
+                    }
                 } else {
                     logger.warning("User not found: " + decodedData);
                 }
